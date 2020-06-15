@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Categories</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script type="text/javascript" src="js/jquery-3.4.1.js"></script>
+    <script type="text/javascript" src="js/main.js"></script>
+
+    <script>
+        jQuery(document).ready(function () {
+            categoryToDropDown();
+        });
+
+
+        jQuery(document).ready(function ($) {
+            $("#search-form").submit(function (event) {
+                event.preventDefault();
+                searchViaAjax();
+            });
+        });
+
+        function clean() {
+            $("#id").val("");
+            $("#name").val("");
+            document.getElementById("feedback").innerHTML = "";
+        }
+
+        function display(data) {
+            var json = "<h5>Ajax Response</h5><pre>"
+                + JSON.stringify(data, null, 4) + "</pre>";
+            $('#feedback').html(json);
+        }
+
+        function searchViaAjax() {
+            var search = {};
+            search["id"] = $("#id").val();
+            search["name"] = $("#name").val();
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "category/search",
+                data: JSON.stringify(search),
+                dataType: 'json',
+                success: function (data) {
+                    display(data);
+                }
+            })
+        }
+
+        function categoryToDropDown() {
+            var dropdownParent = document.getElementById('parentCategory');
+            dropdownParent.length = 0;
+            dropdownParent.selectedIndex = 0;
+
+            var dropdownSub = document.getElementById('subcategory');
+            dropdownSub.length = 0;
+            dropdownSub.selectedIndex = 0;
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                url: "category/drop",
+                dataType: 'json',
+                success: function (data) {
+                    var option;
+                    for (var i = 0; i < data.length; i++) {
+                        option = document.createElement('option');
+                        option.text = data[i].name;
+                        option.value = data[i].id;
+                        dropdownParent.add(option);
+                        dropdownSub.add(option);
+                    }
+                }
+            })
+
+        }
+
+        function categoryToUpdate(id) {
+            $('#hiddenID').val(id);
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                url: "category/" + id,
+                dataType: 'json',
+                success: function (data) {
+                    var json = JSON.stringify(data);
+                    $('#categoryForUpdate').html(json);
+                }
+            })
+        }
+
+        function updateCategory() {
+            var category = JSON.stringify($('#categoryForUpdate').val());
+            var id = $('#hiddenID').val();
+            $.ajax({
+                type: "PUT",
+                contentType: "application/json",
+                url: "category/" + parseInt(id),
+                dataType: 'json',
+                data: category,
+                success: function () {
+                    location.reload();
+                }
+            })
+        }
+
+        function deleteCategory(id) {
+            $.ajax({
+                type: "DELETE",
+                contentType: "application/json",
+                url: "category/" + id,
+                dateType: 'json',
+                success: function () {
+                    location.reload();
+                }
+            })
+        }
+    </script>
+
+</head>
+<body class="container">
+<div th:replace="fragments/header :: header"></div>
+
+<div>
+    <div class="row">
+        <div class="col">
+            <h4>Searching</h4>
+            <div id="feedback" class="alert alert-dark"></div>
+
+            <form class="form-horizontal" id="search-form">
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">ID</label>
+                    <div class="col-sm-10">
+                        <input type=text class="form-control" id="id">
+                    </div>
+                </div>
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">Name</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="submit" id="bth-search"
+                                class="btn btn-outline-primary">Search
+                        </button>
+                        <button type="button" class="btn btn-outline-danger"
+                                th:onclick="'clean()'">Clean
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col">
+            <div>
+                <h4>Add category</h4>
+
+                <label for="categoryName">Name</label>
+                <input type="text" class="form-control" id="categoryName">
+
+                <label for="parentCategory">Parent</label>
+                <select class="dropdown form-control" id="parentCategory" name="parent"></select>
+
+                <button class="btn btn-outline-primary" onclick="create()">Create</button>
+            </div>
+            <div>
+                <h4>Update category</h4>
+                <input type="hidden" id="hiddenID">
+                <div id="categoryForUpdate" class="alert alert-dark"></div>
+                <button type="button" class="btn btn-outline-danger"
+                        th:onclick="'updateCategory()'">Update
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <table class="table">
+
+        <thead>
+        <tr>
+            <th scope="col">Category</th>
+            <th scope="col">Parent category</th>
+            <th scope="col">Sub category</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+
+        <tr th:each="category: ${categories}">
+            <td th:text="${category.name}"></td>
+
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="parent: ${category.parent}">
+                        <td th:text="${parent.name}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="subCategory: ${category.subCategories}">
+                        <td th:text="${subCategory.name}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+
+            <td>
+                <button type="button" class="btn btn-outline-danger"
+                        th:onclick="'deleteCategory(' + ${category.id} + ')'">Delete
+                </button>
+                <button type="button" class="btn btn-outline-warning"
+                        th:onclick="'categoryToUpdate(' + ${category.id}+')'">Edit
+                </button>
+            </td>
+        </tr>
+    </table>
+
+    <div class="row">
+        <div class="form-group col-md-1">
+            <select class="form-control pagination" id="pageSizeSelect">
+                <option th:each="pageSize : ${pageSizes}" th:text="${pageSize}" th:value="${pageSize}"
+                        th:selected="${pageSize} == ${selectedPageSize}"></option>
+            </select>
+        </div>
+        <div th:if="${categories.totalPages != 1}" class="form-group col-md-11 pagination-centered">
+            <ul class="pagination">
+                <li th:class="${categories.number == 0} ? disabled">
+                    <a class="pageLink" th:href="@{/category/(pageSize=${selectedPageSize}, page=1)}">&laquo;</a>
+                </li>
+                <li th:class="${categories.number == 0} ? disabled">
+                    <a class="pageLink"
+                       th:href="@{/category/(pageSize=${selectedPageSize}, page=${categories.number})}">&larr;</a>
+                </li>
+                <li th:class="${categories.number == (page - 1)} ? 'active pointer-disabled'"
+                    th:each="page : ${#numbers.sequence(pager.startPage, pager.endPage)}">
+                    <a class="pageLink" th:href="@{/category/(pageSize=${selectedPageSize}, page=${page})}"
+                       th:text="${page}"></a>
+                </li>
+                <li th:class="${categories.number + 1 == categories.totalPages} ? disabled">
+                    <a class="pageLink"
+                       th:href="@{/category/(pageSize=${selectedPageSize}, page=${categories.number + 2})}">&rarr;</a>
+                </li>
+                <li th:class="${categories.number + 1 == categories.totalPages} ? disabled">
+                    <a class="pageLink"
+                       th:href="@{/category/(pageSize=${selectedPageSize}, page=${categories.totalPages})}">&raquo;</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="js/jquery-3.4.1.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Header</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+</head>
+<body>
+<ul class="nav" th:fragment="header">
+    <li class="nav-item">
+        <a class="nav-link" th:href="@{product}">Products</a>
+
+    </li>
+    <li>
+        <a class="nav-link" th:href="@{category}">Category</a>
+    </li>
+
+</ul>
+</body>
+</html>

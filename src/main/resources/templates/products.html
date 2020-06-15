@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script type="text/javascript" src="js/jquery-3.4.1.js"></script>
+
+    <script>
+        jQuery(document).ready(function ($) {
+            categoryToDropDown();
+            $("#search-form").submit(function (event) {
+                enableSearchButton(false);
+                event.preventDefault();
+                searchViaAjax();
+            });
+        });
+
+        function searchViaAjax() {
+            var search = {};
+            search["id"] = $("#id").val();
+            search["name"] = $("#name").val();
+            search["price"] = $("#price").val();
+            search["categoryID"] = $("#categoryID").val();
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "product/search",
+                data: JSON.stringify(search),
+                dataType: 'json',
+                success: function (data) {
+                    display(data);
+                }
+            })
+
+        }
+
+        function enableSearchButton(flag) {
+            $("#btn-search").prop("disabled", flag);
+        }
+
+        function display(data) {
+            var json = "<h5>Ajax Response</h5><pre>"
+                + JSON.stringify(data, null, 4) + "</pre>";
+            $('#feedback').html(json);
+        }
+
+        function clean() {
+            $('#id').val("");
+            $('#name').val("");
+            $('#price').val("");
+            $('#categoryID').val("");
+            document.getElementById("feedback").innerHTML = "";
+        }
+
+        function categoryToDropDown() {
+            var dropdown1 = document.getElementById('prodCategory1');
+            var dropdown2 = document.getElementById('prodCategory2');
+            var dropdown3 = document.getElementById('prodCategory3');
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                url: "category/drop",
+                dataType: 'json',
+                success: function (data) {
+                    var option1 = document.createElement('option');
+                    option1.text = null;
+                    option1.value = null;
+                    var option2 = document.createElement('option');
+                    option2.text = null;
+                    option2.value = null;
+                    var option3 = document.createElement('option');
+                    option3.text = null;
+                    option3.value = null;
+                    dropdown1.add(option1);
+                    dropdown2.add(option2);
+                    dropdown3.add(option3);
+                    for (var i = 0; i < data.length; i++) {
+                        option1 = document.createElement('option');
+                        option1.text = data[i].name;
+                        option1.value = data[i].id;
+
+                        option2 = document.createElement('option');
+                        option2.text = data[i].name;
+                        option2.value = data[i].id;
+
+                        option3 = document.createElement('option');
+                        option3.text = data[i].name;
+                        option3.value = data[i].id;
+
+                        dropdown1.add(option1);
+                        dropdown2.add(option2);
+                        dropdown3.add(option3);
+                    }
+                }
+            })
+        }
+
+        function create() {
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "product",
+                data: JSON.stringify(
+                    {
+                        name: $("#prodName").val(),
+                        category1: $("#prodCategory1").val(),
+                        category2: $("#prodCategory2").val(),
+                        category3: $("#prodCategory3").val(),
+                        amount1: $("#prodPriceAmountBYN").val(),
+                        amount2: $("#prodPriceAmountEUR").val(),
+                        amount3: $("#prodPriceAmountUSD").val(),
+                    }),
+                dataType: 'json',
+                success: function (data) {
+                    display(data);
+                }
+            });
+        }
+
+        function findByRange() {
+            $.ajax({
+                type: "POST",
+                contentType: "application/json",
+                url: "product/searchByRange",
+                data: JSON.stringify({
+                    from: $("#priceAmountFrom").val(),
+                    to: $("#priceAmountTo").val(),
+                    currency: $("#priceCurrency").val(),
+                }),
+                dataType: 'json',
+                success: function (data) {
+                    display(data);
+                }
+            })
+        }
+
+        function deleteProduct(id) {
+            $.ajax({
+                type: "DELETE",
+                contentType: "application/json",
+                url: "product/" + id,
+                dateType: 'json',
+                success: function () {
+                    location.reload();
+                }
+            })
+        }
+
+        function productToUpdate(id) {
+            $('#prodID').val(id);
+        }
+
+        function updateProduct() {
+            $.ajax({
+                type: "PUT",
+                contentType: "application/json",
+                url: "product",
+                data: JSON.stringify(
+                    {
+                        id: $("#prodID").val(),
+                        name: $("#prodName").val(),
+                        category1: $("#prodCategory1").val(),
+                        category2: $("#prodCategory2").val(),
+                        category3: $("#prodCategory3").val(),
+                        amount1: $("#prodPriceAmountBYN").val(),
+                        amount2: $("#prodPriceAmountEUR").val(),
+                        amount3: $("#prodPriceAmountUSD").val(),
+                    }),
+                dataType: 'json',
+                success: function (data) {
+                    display(data);
+                }
+            });
+        }
+
+    </script>
+</head>
+
+<body class="container">
+<div th:replace="fragments/header :: header"></div>
+<div>
+    <div class="row">
+        <div class="col">
+            <h3>Searching</h3>
+            <div id="feedback" class="alert alert-dark"></div>
+            <form class="form-horizontal" id="search-form">
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">ID</label>
+                    <div class="col-sm-10">
+                        <input type=text class="form-control" id="id">
+                    </div>
+                </div>
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">Name</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="name">
+                    </div>
+                </div>
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">Price</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="price">
+                    </div>
+                </div>
+                <div class="form-group form-group-lg">
+                    <label class="col-sm-2 control-label">Category ID</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="categoryID">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="submit" id="bth-search"
+                                class="btn btn-outline-primary">Search
+                        </button>
+                        <button type="reset" id="bth-reset"
+                                class="btn btn-outline-primary" onclick="clean()">Reset
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col">
+            <div>
+                <h3>Add/Edit product</h3>
+                <input id="prodID" type="text" class="form-control" disabled="disabled">
+                <label for="prodName">Name</label>
+                <input type="text" class="form-control" id="prodName">
+                <div class="row">
+                    <div class="col-sm">
+                        <label for="prodCategory1">Category 1</label>
+                        <select class="custom-select" id="prodCategory1" name="category"></select>
+                    </div>
+                    <div class="col-sm">
+                        <label for="prodCategory2">Category 2</label>
+                        <select class="custom-select" id="prodCategory2" name="category"></select>
+                    </div>
+                    <div class="col-sm">
+                        <label for="prodCategory3">Category 3</label>
+                        <select class="custom-select" id="prodCategory3" name="category"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <label for="prodPriceAmountBYN">Price in BYN</label><input type="text" class="form-control"
+                                                                                   id="prodPriceAmountBYN">
+                    </div>
+                    <div class="col-sm">
+                        <label for="prodPriceAmountEUR">Price in EUR</label><input type="text" class="form-control"
+                                                                                   id="prodPriceAmountEUR">
+                    </div>
+                    <div class="col-sm">
+                        <label for="prodPriceAmountUSD">Price in USD</label><input type="text" class="form-control"
+                                                                                   id="prodPriceAmountUSD">
+                    </div>
+                </div>
+                <button class="btn btn-outline-success" onclick="create()">Create</button>
+                <button class="btn btn-outline-success" onclick="updateProduct()">Update</button>
+            </div>
+            <hr align="center" width="50%" color="Blue"/>
+            <div>
+                <h3>Find by price range</h3>
+                <label for="priceAmountFrom">From</label><input type="text" class="form-control" id="priceAmountFrom">
+                <label for="priceAmountTo">To</label><input type="text" class="form-control" id="priceAmountTo">
+                <label for="priceCurrency">Currency</label><input type="text" class="form-control" id="priceCurrency">
+
+                <button class="btn btn-outline-primary" onclick="findByRange()">Find</button>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+<hr align="center" width="80%" color="Blue"/>
+<div class="container">
+    <h3>Product list:</h3>
+    <table class="table">
+        <thead>
+        <tr>
+
+            <th scope="col">Product ID</th>
+            <th scope="col">Product name</th>
+            <th scope="col">Categories</th>
+            <th scope="col">Price</th>
+            <th scope="col">Actions</th>
+        </tr>
+        </thead>
+        <tr th:each="product: ${products}">
+            <td th:text="${product.id}"></td>
+            <td th:text="${product.name}"></td>
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="category: ${product.categories}">
+                        <td th:text="${category.name}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="price: ${product.prices}">
+                        <td th:text="${price.amount}"></td>
+                        <td th:text="${price.currency}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <button type="button" class="btn btn-outline-danger"
+                        th:onclick="'deleteProduct(' + ${product.id} + ')'">Delete
+                </button>
+                <button type="button" class="btn btn-outline-warning"
+                        th:onclick="'productToUpdate(' + ${product.id} + ')'">Edit
+                </button>
+
+            </td>
+            <td>
+        </tr>
+    </table>
+    <div class="row">
+        <div class="form-group col-md-1">
+            <select class="form-control pagination" id="pageSizeSelect">
+                <option th:each="pageSize : ${pageSizes}" th:text="${pageSize}" th:value="${pageSize}"
+                        th:selected="${pageSize} == ${selectedPageSize}"></option>
+            </select>
+        </div>
+        <div th:if="${products.totalPages != 1}" class="form-group col-md-11 pagination-centered">
+            <ul class="pagination">
+                <li th:class="${products.number == 0} ? disabled">
+                    <a class="pageLink" th:href="@{/product/(pageSize=${selectedPageSize}, page=1)}">&laquo;</a>
+                </li>
+                <li th:class="${products.number == 0} ? disabled">
+                    <a class="pageLink" th:href="@{/product/(pageSize=${selectedPageSize}, page=${products.number})}">&larr;</a>
+                </li>
+                <li th:class="${products.number == (page - 1)} ? 'active pointer-disabled'"
+                    th:each="page : ${#numbers.sequence(pager.startPage, pager.endPage)}">
+                    <a class="pageLink" th:href="@{/product/(pageSize=${selectedPageSize}, page=${page})}"
+                       th:text="${page}"></a>
+                </li>
+                <li th:class="${products.number + 1 == products.totalPages} ? disabled">
+                    <a class="pageLink"
+                       th:href="@{/product/(pageSize=${selectedPageSize}, page=${products.number + 2})}">&rarr;</a>
+                </li>
+                <li th:class="${products.number + 1 == products.totalPages} ? disabled">
+                    <a class="pageLink"
+                       th:href="@{/product/(pageSize=${selectedPageSize}, page=${products.totalPages})}">&raquo;</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="js/jquery-3.4.1.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+
+</body>
+</html>
