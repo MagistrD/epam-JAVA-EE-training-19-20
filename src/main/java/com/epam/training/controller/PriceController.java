@@ -1,4 +1,4 @@
-package com.epam.training.conroller;
+package com.epam.training.controller;
 
 import com.epam.training.model.Price;
 import com.epam.training.service.impl.PriceServiceImpl;

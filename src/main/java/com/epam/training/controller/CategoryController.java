@@ -1,4 +1,4 @@
-package com.epam.training.conroller;
+package com.epam.training.controller;
 
 import com.epam.training.dto.CategoryDto;
 import com.epam.training.model.Category;
